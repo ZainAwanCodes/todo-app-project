@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
-import { Plus, Menu, X, RefreshCw } from "lucide-react";
+import { useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import { Plus, Menu, RefreshCw } from "lucide-react";
 import { todosApi } from "@/lib/api";
 import type { Todo, CreateTodoInput, FilterType, SortType, NavView } from "@/lib/types";
 import { isPast, isToday, isFuture, getGreeting, formatDisplayDate } from "@/lib/dateUtils";
@@ -116,7 +116,11 @@ function AppInner() {
   const [sort, setSort] = useState<SortType>("newest");
   const [search, setSearch] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Dialog state
   const [createOpen, setCreateOpen] = useState(false);
@@ -135,29 +139,39 @@ function AppInner() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Could not load tasks.";
       dispatch({ type: "ERROR", error: msg });
+      toast(msg, "error");
     }
   }
 
   useEffect(() => { 
-    setMounted(true);
     loadTodos(); 
   }, []);
 
   // ── Create ──────────────────────────────────────────────────────────────
   async function handleCreate(data: CreateTodoInput) {
-    const todo = await todosApi.create(data);
-    dispatch({ type: "ADD", todo });
-    setCreateOpen(false);
-    toast("Task created.", "success");
+    try {
+      const todo = await todosApi.create(data);
+      dispatch({ type: "ADD", todo });
+      setCreateOpen(false);
+      toast("Task created.", "success");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to create task.";
+      toast(msg, "error");
+    }
   }
 
   // ── Edit ────────────────────────────────────────────────────────────────
   async function handleEdit(data: CreateTodoInput) {
     if (!editTask) return;
-    const updated = await todosApi.update(editTask.id, data);
-    dispatch({ type: "UPDATE", todo: updated });
-    setEditTask(null);
-    toast("Task updated.", "success");
+    try {
+      const updated = await todosApi.update(editTask.id, data);
+      dispatch({ type: "UPDATE", todo: updated });
+      setEditTask(null);
+      toast("Task updated.", "success");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to update task.";
+      toast(msg, "error");
+    }
   }
 
   // ── Toggle ──────────────────────────────────────────────────────────────

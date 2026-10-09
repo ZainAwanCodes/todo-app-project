@@ -32,7 +32,7 @@ export function DeleteTaskDialog({ taskTitle, onConfirm, onCancel, isDeleting }:
         <div className="confirm-icon"><AlertTriangle size={22} /></div>
         <h2 className="confirm-title" id="delete-title">Delete task?</h2>
         <p className="confirm-body" id="delete-desc">
-          <span className="confirm-task-name">"{taskTitle}"</span> will be permanently removed.
+          <span className="confirm-task-name">&ldquo;{taskTitle}&rdquo;</span> will be permanently removed.
           This action cannot be undone.
         </p>
         <div className="confirm-actions">
